@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import random
 from vehicle import Vehicle, PlayerVehicle
+from colors import *
 
 pygame.init()
 
@@ -11,32 +12,6 @@ height = 500
 screen_size = (width, height)
 screen = pygame.display.set_mode(screen_size)
 pygame.display.set_caption('Car Game')
-
-# colors
-gray = (100, 100, 100)
-green = (76, 208, 56)
-red = (200, 0, 0)
-white = (255, 255, 255)
-yellow = (255, 232, 0)
-
-# road and marker sizes
-road_width = 300
-marker_width = 10
-marker_height = 50
-
-# lane coordinates
-left_lane = 150
-center_lane = 250
-right_lane = 350
-lanes = [left_lane, center_lane, right_lane]
-
-# road and edge markers
-road = (100, 0, road_width, height)
-left_edge_marker = (95, 0, marker_width, height)
-right_edge_marker = (395, 0, marker_width, height)
-
-# for animating movement of the lane markers
-lane_marker_move_y = 0
 
 # player's starting coordinates
 player_x = 250
@@ -48,7 +23,7 @@ fps = 120
 
 # game settings
 gameover = False
-speed = 2
+speed = 1.5
 score = 0
 
 # sprite groups
@@ -58,6 +33,48 @@ vehicle_group = pygame.sprite.Group()
 # create the player's car
 player = PlayerVehicle(player_x, player_y)
 player_group.add(player)
+
+# lane coordinates
+left_lane = 150
+center_lane =250
+right_lane = 300
+road_width = 300
+marker_width = 10
+marker_height = 50
+left_edge_marker = (95, 0, marker_width, height)
+right_edge_marker = (395, 0, marker_width, height)
+lanes = [left_lane, center_lane, right_lane]
+lane_marker_move_y = 0
+
+def draw_road():
+    global lane_marker_move_y
+    global left_edge_marker
+    global right_edge_marker
+    global marker_width
+    global marker_height
+    # road and marker sizes
+
+
+    # road and edge markers
+    road = (100, 0, road_width, height)
+
+    # draw the grass
+    screen.fill([0,0,0])
+    # draw the road
+    pygame.draw.rect(screen, gray, road)
+    # draw the edge markers
+    pygame.draw.rect(screen, yellow, left_edge_marker)
+    pygame.draw.rect(screen, yellow, right_edge_marker)
+    # draw the lane markers
+    lane_marker_move_y += speed * 2
+    if lane_marker_move_y >= marker_height * 2:
+        lane_marker_move_y = 0
+
+    print(lane_marker_move_y)
+
+    for y in range(marker_height * -2, height, marker_height * 2):
+        pygame.draw.rect(screen, white, (left_lane + 45, y + lane_marker_move_y, marker_width, marker_height))
+        pygame.draw.rect(screen, white, (center_lane + 45, y + lane_marker_move_y, marker_width, marker_height))
 
 # load the vehicle images
 image_filenames = ['pickup_truck.png', 'semi_trailer.png', 'taxi.png', 'van.png']
@@ -77,7 +94,7 @@ running = True
 while running:
     
     clock.tick(fps)
-    player.updatePos(15)
+    player.updatePos(50)
     
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -93,7 +110,7 @@ while running:
                 
             # check if there's a side swipe collision after changing lanes
             for vehicle in vehicle_group:
-                if player.is_collision_rotated(vehicle):
+                if player.is_collision_rotated(vehicle) or player.is_collision_rotated(left_edge_marker[0]) or player.is_collision_rotated(right_edge_marker[0]+50):
                     print('looks like is true')
                     
                     gameover = True
@@ -107,20 +124,7 @@ while running:
                         player.rect.right = vehicle.rect.left
                         crash_rect.center = [player.rect.right, (player.center[1] + vehicle.center[1]) / 2]
             
-    # draw the grass
-    screen.fill(green)
-    # draw the road
-    pygame.draw.rect(screen, gray, road)
-    # draw the edge markers
-    pygame.draw.rect(screen, yellow, left_edge_marker)
-    pygame.draw.rect(screen, yellow, right_edge_marker)
-    # draw the lane markers
-    lane_marker_move_y += speed * 2
-    if lane_marker_move_y >= marker_height * 2:
-        lane_marker_move_y = 0
-    for y in range(marker_height * -2, height, marker_height * 2):
-        pygame.draw.rect(screen, white, (left_lane + 45, y + lane_marker_move_y, marker_width, marker_height))
-        pygame.draw.rect(screen, white, (center_lane + 45, y + lane_marker_move_y, marker_width, marker_height))
+    draw_road()
         
     # draw the player's car
     player_group.draw(screen)
@@ -147,17 +151,14 @@ while running:
     # make the vehicles move
     for vehicle in vehicle_group:
         vehicle.rect.y += speed
-        
         # remove vehicle once it goes off screen
         if vehicle.rect.top >= height:
             vehicle.kill()
-            
             # add to score
             score += 1
-            
             # speed up the game after passing 5 vehicles
-            if score > 0 and score % 5 == 0:
-                speed += 1
+            # if score > 0 and score % 5 == 0:
+            #     speed += 1
     
     # draw the vehiclesis_collision2
     vehicle_group.draw(screen)
@@ -171,7 +172,7 @@ while running:
     
     # check if there's a head on collision
     for vehicle in vehicle_group:
-        if player.is_collision_rotated(vehicle):
+        if player.is_collision_rotated(vehicle) or player.is_collision_rotated(left_edge_marker[0]) or player.is_collision_rotated(right_edge_marker[0]+50):
             print('looks like is true')
             gameover = True
             crash_rect.center = [player.rect.center[0], player.rect.top]

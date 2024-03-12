@@ -30,14 +30,17 @@ class PlayerVehicle(Vehicle):
         self.y = y
         self.angle = 0
 
+
+    # movement functions
+
     def moveLeft(self):
-        self.angle += 2
+        self.angle += 4
         self.rotateVehicle()
         self.x -= 2
         self.rect.center = [self.x, self.y]
 
     def moveRight(self):
-        self.angle -= 2
+        self.angle -= 4
         self.rotateVehicle()
         self.x += 2
         self.rect.center = [self.x, self.y]
@@ -47,14 +50,12 @@ class PlayerVehicle(Vehicle):
     	self.rect.center = [self.x, self.y]
 
     def rotateVehicle(self):
-        # Load the original image
         image = pygame.image.load('images/car.png')
-        # Rotate the original image by the current angle
         self.image = pygame.transform.rotate(image, self.angle)
-        # Update the rectangle position
         self.rect = self.image.get_rect(center=self.rect.center)
 
-       # Function to rotate a point around another point
+    #-------------------------------------------------------------
+
     def rotate_point(self, point, angle, pivot):
         x, y = point
         px, py = pivot
@@ -68,9 +69,17 @@ class PlayerVehicle(Vehicle):
                     rect1[1] + rect1[3] < rect2[1] or rect1[1] > rect2[1] + rect2[3])
 
     # Function to check collision between a rotated square and a regular square
-    def is_collision_rotated(self, Vehicle):
+    # use this for the lane collision as well
+    # verify if is a vehicle that colides , if not , create a long rect with the x pos of the lane
+    def is_collision_rotated(self, rectCol):
         # Define two squares
-        rect = (Vehicle.rect.x + Vehicle.width/2, Vehicle.rect.y + Vehicle.height/2, Vehicle.width, Vehicle.height)
+        if isinstance(rectCol, Vehicle):
+            rect = (rectCol.rect.x + rectCol.width/2, rectCol.rect.y + rectCol.height/2, rectCol.width, rectCol.height)
+        else:
+            rect = (rectCol , 500, 1, 500)
+
+        if isinstance(rectCol, int):
+            print(rect)
 
         # Rotate square1 by 5 degrees
         rotated_square1 = tuple(round(coord) for coord in self.rotate_point(tuple([self.x,self.y]), self.angle, tuple(self.center)) + tuple([self.width, self.height]))
@@ -84,6 +93,9 @@ class PlayerVehicle(Vehicle):
                           (rotated_square1[0] + rotated_square1[2], rotated_square1[1] + rotated_square1[3]),
                           (rotated_square1[0], rotated_square1[1] + rotated_square1[3])]:
                 if rect[0] <= point[0] <= rect[0] + rect[2] and rect[1] <= point[1] <= rect[1] + rect[3]:
+                    print("These ones collide")
+                    print(rotated_square1)
+                    print(rect)
                     return True
         return False
 
