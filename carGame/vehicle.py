@@ -4,6 +4,39 @@ import math
 VEHICLE_WIDTH = 50
 VEHICLE_HEIGHT = 100
 
+angle_maps = [40, 20, 0, -20, -40]
+
+class Sensor(pygame.sprite.Sprite):
+
+    def __init__(self, x, y, angle):
+        pygame.sprite.Sprite.__init__(self)
+        self.angle = angle
+
+        image = pygame.image.load('images/sensorColor.png')
+        self.image = pygame.transform.scale(image, (5, 200))
+        self.width, self.height = image.get_size()
+        self.rect = self.image.get_rect()
+
+    def updateSensorAlongWithSquare(self, Player, angle):
+        self.angle = self.angle + angle
+
+        print('update with the following sensor')
+        print(angle)
+
+        rotatedSquare =  Player.rotate_point(tuple([Player.x,Player.y]), Player.angle, tuple(Player.center))
+        self.rect.x, self.rect.y = rotatedSquare[0] + Player.width / 2, rotatedSquare[1] - 100
+        self.rect.center = [self.rect.x - Player.width/2, self.rect.y]
+
+        image = pygame.image.load('images/sensorColor.png')
+        self.image = pygame.transform.rotate(image, angle)
+        print('widht:'+str(self.image.get_size()[0]))
+        if angle <= 0 :
+            self.rect = self.image.get_rect(center=[self.rect.x + self.image.get_size()[0]*1.5-8,self.rect.center[1] - 50])
+        else:
+            self.rect = self.image.get_rect(center=[self.rect.x - self.image.get_size()[0]+18,self.rect.center[1] - 50])
+
+
+
 class Vehicle(pygame.sprite.Sprite):
     
     def __init__(self, image, x, y):
@@ -11,12 +44,12 @@ class Vehicle(pygame.sprite.Sprite):
         
         # scale the image down so it's not wider than the lane
         self.image = pygame.transform.scale(image, (VEHICLE_WIDTH, VEHICLE_HEIGHT))
-        self.width, self.height = image.get_size()
+        self.width, self.height = VEHICLE_WIDTH , VEHICLE_HEIGHT
         self.rect = self.image.get_rect()
-        self.rect.center = [x+self.width/2,y+self.height/2]
+        self.rect.center = [x+self.width/2, y+self.height/2]
         self.x = x
         self.y = y
-        self.center = [x+self.width/2,y+self.height/2]
+        self.center = [x+self.width/2, y+self.height/2]
 
 
 class PlayerVehicle(Vehicle):
@@ -25,10 +58,16 @@ class PlayerVehicle(Vehicle):
         image = pygame.image.load('images/car.png')
         super().__init__(image, x, y)
         self.width, self.height = image.get_size()
-        self.center = [x+self.width/2,y+self.height/2]
+        self.center = [x+self.width/2, y+self.height/2]
         self.x = x
         self.y = y
         self.angle = 0
+
+        self.sensors = []
+
+        # for i in range(5):
+        #     self.sensors.append(Sensor(self.x, self.y, self.angle + angle_maps[i]))
+
 
 
     # movement functions
@@ -38,16 +77,28 @@ class PlayerVehicle(Vehicle):
         self.rotateVehicle()
         self.x -= 2
         self.rect.center = [self.x, self.y]
+        # for s in range(len(self.sensors)):
+        #     # self.sensors[s].rect.x = self.x
+        #     # self.sensors[s].rect.y = self.y
+        #     self.sensors[s].updateSensorAlongWithSquare(self, self.angle + angle_maps[s])
 
     def moveRight(self):
         self.angle -= 4
         self.rotateVehicle()
         self.x += 2
         self.rect.center = [self.x, self.y]
+        # for s in range(len(self.sensors)):
+        #     # self.sensors[s].rect.x = self.x
+        #     # self.sensors[s].rect.y = self.y
+        #     self.sensors[s].updateSensorAlongWithSquare(self, self.angle + angle_maps[s])
 
     def updatePos(self, velocity):
-    	self.x -= velocity*(self.angle / 360)
-    	self.rect.center = [self.x, self.y]
+        self.x -= velocity*(self.angle / 360)
+        self.rect.center = [self.x, self.y]
+        # for s in range(len(self.sensors)):
+        #     # self.sensors[s].rect.x = self.x
+        #     # self.sensors[s].rect.y = self.y
+        #     self.sensors[s].updateSensorAlongWithSquare(self, self.angle)
 
     def rotateVehicle(self):
         image = pygame.image.load('images/car.png')
@@ -73,14 +124,7 @@ class PlayerVehicle(Vehicle):
     # verify if is a vehicle that colides , if not , create a long rect with the x pos of the lane
     def is_collision_rotated(self, rectCol):
         # Define two squares
-        if isinstance(rectCol, Vehicle):
-            rect = (rectCol.rect.x + rectCol.width/2, rectCol.rect.y + rectCol.height/2, rectCol.width, rectCol.height)
-        else:
-            rect = (rectCol , 500, 1, 500)
-
-        if isinstance(rectCol, int):
-            print(rect)
-
+        rect = (rectCol.rect.x + rectCol.width/2, rectCol.rect.y + rectCol.height/2, rectCol.width, rectCol.height)
         # Rotate square1 by 5 degrees
         rotated_square1 = tuple(round(coord) for coord in self.rotate_point(tuple([self.x,self.y]), self.angle, tuple(self.center)) + tuple([self.width, self.height]))
 

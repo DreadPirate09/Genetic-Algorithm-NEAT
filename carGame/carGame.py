@@ -33,6 +33,11 @@ vehicle_group = pygame.sprite.Group()
 # create the player's car
 player = PlayerVehicle(player_x, player_y)
 player_group.add(player)
+# player_group.add(player.sensors[0])
+# player_group.add(player.sensors[1])
+# player_group.add(player.sensors[2])
+# player_group.add(player.sensors[3])
+# player_group.add(player.sensors[4])
 
 # lane coordinates
 left_lane = 150
@@ -110,7 +115,7 @@ while running:
                 
             # check if there's a side swipe collision after changing lanes
             for vehicle in vehicle_group:
-                if player.is_collision_rotated(vehicle) or player.is_collision_rotated(left_edge_marker[0]) or player.is_collision_rotated(right_edge_marker[0]+50):
+                if player.is_collision_rotated(vehicle) or player.x < left_edge_marker[0] or player.x > right_edge_marker[0]:
                     print('looks like is true')
                     
                     gameover = True
@@ -172,7 +177,7 @@ while running:
     
     # check if there's a head on collision
     for vehicle in vehicle_group:
-        if player.is_collision_rotated(vehicle) or player.is_collision_rotated(left_edge_marker[0]) or player.is_collision_rotated(right_edge_marker[0]+50):
+        if player.is_collision_rotated(vehicle) or player.x < left_edge_marker[0] or player.x > right_edge_marker[0]:
             print('looks like is true')
             gameover = True
             crash_rect.center = [player.rect.center[0], player.rect.top]
@@ -207,6 +212,7 @@ while running:
                 if event.key == K_y:
                     # reset the game
                     gameover = False
+                    player.x = 250
                     speed = 2
                     score = 0
                     vehicle_group.empty()
