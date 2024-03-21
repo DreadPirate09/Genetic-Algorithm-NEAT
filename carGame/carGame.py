@@ -3,8 +3,38 @@ from pygame.locals import *
 import random
 from vehicle import Vehicle, PlayerVehicle
 from colors import *
+from network import *
+import datetime
+import math
+
+lastActionFw = datetime.datetime.now()
+
+def delay(microsec):
+
+    global lastActionFw
+    now = datetime.datetime.now()
+
+    print('now:')
+    print(now.microsecond)
+    print('last:')
+    print(lastActionFw.microsecond)
+
+
+    if now.microsecond - lastActionFw.microsecond:
+        lastActionFw = datetime.datetime.now()
+        print('delay true')
+        return True
+    else:
+        print('delay false')
+        return False
 
 pygame.init()
+
+control = 'NN'
+neurons = [3, 4, 2]
+network = NeuralNetwork(neurons)
+input_values = [ 0.5 , 0.3 , 0.8]
+output = NeuralNetwork.feed_forward(input_values, network)
 
 # create the window
 width = 500
@@ -106,13 +136,22 @@ while running:
             running = False
             
         # move the player's car using the left/right arrow keys
-        if event.type == KEYDOWN:
-            
-            if event.key == K_LEFT and player.rect.center[0] > left_lane:
-                player.moveLeft()
-            elif event.key == K_RIGHT and player.rect.center[0] < right_lane:
-                player.moveRight()
-                
+        if (event.type == KEYDOWN and control != 'NN') or control == 'NN':
+
+            if control != 'NN':
+                if event.key == K_LEFT and player.rect.center[0] > left_lane:
+                    player.moveLeft()
+                elif event.key == K_RIGHT and player.rect.center[0] < right_lane:
+                    player.moveRight()
+            else:
+                if output[0] != output[1]:
+                    if output[0] == 1 and delay(0.1):
+                        player.moveLeft()
+                        print('move left when output[0] is '+str(output[0]))
+                    elif output[1] == 1 and delay(0.1):
+                        player.moveRight()
+                        print('move Right when output[1] is '+str(output[1]))
+                    
             # check if there's a side swipe collision after changing lanes
             for vehicle in vehicle_group:
                 if player.is_collision_rotated(vehicle) or player.x < left_edge_marker[0] or player.x > right_edge_marker[0]:
@@ -178,7 +217,6 @@ while running:
     # check if there's a head on collision
     for vehicle in vehicle_group:
         if player.is_collision_rotated(vehicle) or player.x < left_edge_marker[0] or player.x > right_edge_marker[0]:
-            print('looks like is true')
             gameover = True
             crash_rect.center = [player.rect.center[0], player.rect.top]
             
@@ -196,8 +234,24 @@ while running:
             
 
     for v in vehicle_group:
+        distNextVehicle = 0
         if v.rect.y > 0:
             print('This vehicle is at : '+str(v.rect.x)+' '+str(v.rect.y))
+            print('Distanta dintre acest vehicul si player este de :')
+            distNextVehicle = math.sqrt((v.rect.center[0] - player.rect.center[0])**2 + (v.rect.center[0] - player.rect.center[0])**2)
+            print(distNextVehicle)
+        distFromRight = right_lane - player.rect.center[0] + 100
+        distFromLeft  = player.rect.center[0] - left_lane + 50
+
+        print('Distanta pana in dreapta')
+        print(distFromRight)
+        print('Distanta pana in stanga')
+        print(distFromLeft)
+
+        input_values = [ distNextVehicle , distFromRight , distFromLeft ]
+        output = NeuralNetwork.feed_forward(input_values, network)
+        print(output)
+
     pygame.display.update()
 
     # wait for user's input to play again or exit
