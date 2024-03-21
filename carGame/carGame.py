@@ -194,6 +194,10 @@ while running:
         text_rect.center = (width / 2, 100)
         screen.blit(text, text_rect)
             
+
+    for v in vehicle_group:
+        if v.rect.y > 0:
+            print('This vehicle is at : '+str(v.rect.x)+' '+str(v.rect.y))
     pygame.display.update()
 
     # wait for user's input to play again or exit
